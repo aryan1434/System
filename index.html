@@ -1,0 +1,895 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#060a0f;--bg2:#0d1520;--bg3:#111d2e;--panel:#0e1a27;
+--border:#1a3a5c;--accent:#00c8ff;--accent2:#ff6b35;--accent3:#7c3aed;
+--gold:#ffd700;--green:#00ff88;--red:#ff3366;--text:#e2f0ff;--text2:#6b9ac4;--text3:#3d6080;
+}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,200,255,0.012) 2px,rgba(0,200,255,0.012) 4px);pointer-events:none;z-index:9999}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.hud-bar{background:linear-gradient(90deg,#060a0f,#0d1a2e 50%,#060a0f);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#00c8ff,#7c3aed,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hud-resources{display:flex;gap:14px;align-items:center}
+.rpill{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-family:'Share Tech Mono',monospace;font-size:12px}
+.main-layout{display:grid;grid-template-columns:220px 1fr 250px;flex:1}
+.sidebar{background:var(--panel);border-right:1px solid var(--border);padding:14px 0;display:flex;flex-direction:column;gap:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;letter-spacing:1px;color:var(--text2);border-left:3px solid transparent}
+.nav-item:hover{background:rgba(0,200,255,0.05);color:var(--text)}
+.nav-item.active{background:rgba(0,200,255,0.08);color:var(--accent);border-left-color:var(--accent)}
+.content{padding:18px;overflow-y:auto;background:var(--bg)}
+.right-panel{background:var(--panel);border-left:1px solid var(--border);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.stitle{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* Profile */
+.profile-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;position:relative;overflow:hidden}
+.profile-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent3),var(--accent),var(--accent2))}
+.avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent3),var(--accent));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:white;border:2px solid var(--accent);float:left;margin-right:14px}
+.pname{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;margin-bottom:2px}
+.pclass{font-size:11px;color:var(--accent);letter-spacing:2px;margin-bottom:6px}
+.lvl-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,0.2);border:1px solid var(--accent3);border-radius:4px;padding:2px 10px;font-family:'Share Tech Mono',monospace;font-size:12px;color:#b47aff}
+.xp-bar-c{margin-top:10px;clear:both}
+.xp-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;font-family:'Share Tech Mono',monospace}
+.xp-bar{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;border:1px solid rgba(0,200,255,0.1)}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--accent3),var(--accent));border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px}
+.stat-name{font-size:10px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:3px}
+.stat-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:5px}
+.stat-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden}
+.stat-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.str-c{color:#ff6b35}.str-f{background:#ff6b35}
+.int-c{color:#00c8ff}.int-f{background:#00c8ff}
+.sta-c{color:#00ff88}.sta-f{background:#00ff88}
+.dis-c{color:#ffd700}.dis-f{background:#ffd700}
+.foc-c{color:#b47aff}.foc-f{background:#b47aff}
+
+/* Quests */
+.quest-list{display:flex;flex-direction:column;gap:8px}
+.quest-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.quest-item:hover{border-color:rgba(0,200,255,.4)}
+.quest-item.completed{opacity:.5;border-color:var(--green)}
+.qcheck{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;margin-top:1px}
+.quest-item.completed .qcheck{background:var(--green);border-color:var(--green)}
+.qinfo{flex:1}
+.qname{font-weight:600;font-size:14px;margin-bottom:3px}
+.qdesc{font-size:11px;color:var(--text2);margin-bottom:6px}
+.qtags{display:flex;gap:5px;flex-wrap:wrap}
+.qtag{font-size:10px;padding:2px 7px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;font-family:'Share Tech Mono',monospace}
+.tag-xp{background:rgba(124,58,237,.2);color:#b47aff;border:1px solid rgba(124,58,237,.3)}
+.tag-coin{background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.2)}
+.tag-stat{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2)}
+.add-quest-btn{width:100%;padding:10px;background:transparent;border:1px dashed var(--border);border-radius:6px;color:var(--text3);font-family:'Rajdhani',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:1px;margin-top:10px}
+.add-quest-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ===================== RANKING SYSTEM ===================== */
+.rank-hero{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px;text-align:center;position:relative;overflow:hidden}
+.rank-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.rank-badge-big{font-size:56px;margin-bottom:8px;display:block;filter:drop-shadow(0 0 12px currentColor)}
+.rank-name-big{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;margin-bottom:4px;letter-spacing:2px}
+.rank-sub{font-size:12px;color:var(--text2);letter-spacing:2px;margin-bottom:12px}
+.rank-progress-wrap{background:rgba(255,255,255,0.05);border-radius:4px;height:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);margin-bottom:6px}
+.rank-progress-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.rank-progress-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);font-family:'Share Tech Mono',monospace}
+
+/* Rank tiers */
+.tiers-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.tier-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.tier-card:hover{transform:translateY(-2px)}
+.tier-card.current{border-width:2px}
+.tier-card.locked{opacity:.4;filter:grayscale(.6)}
+.tier-icon{font-size:26px;margin-bottom:5px;display:block}
+.tier-name{font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:2px}
+.tier-req{font-size:10px;color:var(--text3);font-family:'Share Tech Mono',monospace}
+.current-badge{position:absolute;top:-6px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;font-size:9px;padding:2px 8px;border-radius:8px;font-weight:700;letter-spacing:1px;white-space:nowrap}
+
+/* Leaderboard */
+.leaderboard{display:flex;flex-direction:column;gap:0}
+.lb-header{display:grid;grid-template-columns:40px 1fr 80px 70px 70px;gap:8px;padding:8px 14px;font-size:10px;color:var(--text3);letter-spacing:2px;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace}
+.lb-row{display:grid;grid-template-columns:40px 1fr 80px 70px 70px;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(26,58,92,0.3);align-items:center;transition:background .2s;cursor:pointer}
+.lb-row:hover{background:rgba(0,200,255,0.04)}
+.lb-row.me{background:rgba(0,200,255,0.06);border-left:3px solid var(--accent)}
+.lb-row.top1{background:rgba(255,215,0,0.04)}
+.lb-row.top2{background:rgba(192,192,192,0.04)}
+.lb-row.top3{background:rgba(205,127,50,0.04)}
+.lb-rank{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;text-align:center}
+.lb-player{display:flex;align-items:center;gap:10px}
+.lb-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.lb-pname{font-size:13px;font-weight:600}
+.lb-class{font-size:10px;color:var(--text3);letter-spacing:1px}
+.lb-rank-badge{font-size:14px}
+.lb-xp{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--accent);text-align:right}
+.lb-streak{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--accent2);text-align:right}
+
+/* Rank up animation */
+@keyframes rankPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.rank-animate{animation:rankPulse 2s infinite}
+
+/* Season timer */
+.season-bar{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.season-icon{font-size:20px}
+.season-info{flex:1}
+.season-name{font-size:13px;font-weight:700;color:#b47aff;letter-spacing:1px}
+.season-time{font-size:11px;color:var(--text3);font-family:'Share Tech Mono',monospace;margin-top:2px}
+.season-prog{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:6px;overflow:hidden}
+.season-prog-fill{height:100%;background:var(--accent3);border-radius:2px;width:62%}
+
+/* Rank rewards panel */
+.rank-rewards{display:flex;flex-direction:column;gap:6px}
+.reward-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:12px}
+.reward-rank-icon{font-size:18px;width:28px;text-align:center}
+.reward-info{flex:1}
+.reward-name{font-weight:600;font-size:13px}
+.reward-desc{font-size:11px;color:var(--text2)}
+.reward-prize{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold)}
+.reward-row.claimed{opacity:.5}
+.reward-row.current{border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.04)}
+
+/* Shop */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.shop-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center;cursor:pointer;transition:all .2s}
+.shop-item:hover{border-color:var(--gold)}
+.shop-name{font-size:12px;font-weight:600;margin:6px 0 3px}
+.shop-desc{font-size:10px;color:var(--text2);margin-bottom:8px}
+.shop-price{display:inline-flex;align-items:center;gap:4px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:3px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold)}
+
+/* Skills */
+.skills-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.skill-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.skill-card:hover{border-color:var(--accent3)}
+.skill-card.unlocked{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.05)}
+.skill-card.locked{opacity:.45;filter:grayscale(.5)}
+
+/* Inventory */
+.inv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.inv-slot{aspect-ratio:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all .2s;position:relative}
+.inv-slot:hover{border-color:var(--accent)}
+.inv-slot.empty{opacity:.25}
+.inv-count{position:absolute;bottom:2px;right:4px;font-size:10px;font-family:'Share Tech Mono',monospace;color:var(--gold)}
+
+/* Toasts */
+.toast-container{position:fixed;top:65px;right:16px;z-index:9998;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--bg3);border-radius:6px;padding:10px 14px;font-size:12px;animation:slideIn .3s ease;max-width:260px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.info{border-left:3px solid var(--accent)}
+.toast.warning{border-left:3px solid var(--accent2)}
+.toast.gold{border-left:3px solid var(--gold)}
+.toast-title{font-weight:700;margin-bottom:1px;font-size:13px}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Level-up overlay */
+.overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:9997;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.overlay.show{display:flex}
+.overlay-title{font-family:'Orbitron',monospace;font-size:42px;font-weight:900;background:linear-gradient(90deg,var(--gold),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:p 1s infinite alternate;margin-bottom:6px}
+@keyframes p{from{opacity:.8;transform:scale(.98)}to{opacity:1;transform:scale(1.02)}}
+.overlay-sub{font-size:16px;color:var(--text2);letter-spacing:3px;margin-bottom:24px}
+.overlay-close{padding:10px 36px;background:var(--accent);color:var(--bg);border:none;border-radius:4px;font-family:'Orbitron',monospace;font-size:12px;cursor:pointer;letter-spacing:2px;font-weight:700}
+
+/* Rank-up special overlay */
+.rankup-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:9996;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.rankup-overlay.show{display:flex}
+.rankup-icon{font-size:80px;animation:p 1.5s infinite alternate;margin-bottom:12px}
+.rankup-title{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;letter-spacing:4px;margin-bottom:4px}
+.rankup-sub{font-size:14px;color:var(--text2);letter-spacing:3px;margin-bottom:6px}
+.rankup-new{font-size:28px;font-weight:900;font-family:'Orbitron',monospace;margin-bottom:24px;letter-spacing:3px}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:22px;width:340px;max-width:90vw}
+.modal-title{font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;margin-bottom:14px;color:var(--accent)}
+.form-group{margin-bottom:10px}
+.form-label{font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;display:block}
+input[type=text],input[type=number],select{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Rajdhani',sans-serif;padding:7px 10px;font-size:13px;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+select option{background:var(--bg3)}
+.btn-pri{width:100%;padding:11px;background:var(--accent);color:var(--bg);border:none;border-radius:4px;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;font-weight:700;margin-top:6px}
+.btn-sec{width:100%;padding:9px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px;cursor:pointer;margin-top:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.ai-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(0,200,255,.1));border:1px solid rgba(124,58,237,.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:1px;margin-bottom:14px}
+.ai-btn:hover{border-color:var(--accent3)}
+.ai-pulse{width:9px;height:9px;background:var(--accent3);border-radius:50%;animation:glow 1.5s infinite alternate;flex-shrink:0}
+@keyframes glow{from{box-shadow:0 0 4px var(--accent3)}to{box-shadow:0 0 12px var(--accent3),0 0 4px var(--accent)}}
+.streak-display{display:flex;align-items:center;gap:12px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:8px;padding:12px 16px;margin-bottom:14px}
+.streak-num{font-family:'Orbitron',monospace;font-size:34px;font-weight:900;color:var(--accent2);line-height:1}
+.week-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px}
+.day-dot{display:flex;flex-direction:column;align-items:center;gap:3px}
+.day-lbl{font-size:9px;color:var(--text3);letter-spacing:1px}
+.day-circle{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'Share Tech Mono',monospace}
+.day-circle.done{background:var(--green);border-color:var(--green);color:var(--bg);font-weight:700}
+.day-circle.today{border-color:var(--accent);color:var(--accent)}
+.milestones{display:flex;justify-content:space-between;position:relative;margin:14px 0}
+.milestones::before{content:'';position:absolute;top:12px;left:24px;right:24px;height:1px;background:var(--border)}
+.milestone{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;z-index:1}
+.ms-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'Share Tech Mono',monospace;color:var(--text3)}
+.ms-dot.reached{border-color:var(--accent);color:var(--accent);background:rgba(0,200,255,.1)}
+.ms-dot.current{border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,.1)}
+.ms-label{font-size:9px;color:var(--text3);font-family:'Share Tech Mono',monospace}
+</style>
+
+<h2 class="sr-only">Blaze System — Full RPG productivity app with ranking, leaderboard, quests, stats, skills, shop, and streak tracking</h2>
+<div class="toast-container" id="toasts"></div>
+
+<!-- Level Up Overlay -->
+<div class="overlay" id="lvlOverlay">
+  <div class="overlay-title" id="lvlTitle">LEVEL UP!</div>
+  <div class="overlay-sub">RANK INCREASED · LEVEL <span id="lvlNum">12</span></div>
+  <button class="overlay-close" onclick="closeLvl()">CONTINUE</button>
+</div>
+
+<!-- Rank Up Overlay -->
+<div class="rankup-overlay" id="rankupOverlay">
+  <div class="rankup-icon" id="rankupIcon">🥈</div>
+  <div class="rankup-title" style="color:var(--gold)">RANK UP!</div>
+  <div class="rankup-sub">YOU HAVE ASCENDED TO</div>
+  <div class="rankup-new" id="rankupNew" style="color:var(--gold)">SILVER</div>
+  <button class="overlay-close" style="background:var(--gold);color:#000" onclick="closeRankup()">CLAIM GLORY</button>
+</div>
+
+<!-- Add Quest Modal -->
+<div class="modal-overlay" id="addQuestModal">
+  <div class="modal-box">
+    <div class="modal-title">NEW QUEST</div>
+    <div class="form-group"><label class="form-label">Quest Name</label><input type="text" id="nqName" placeholder="Enter quest name..."></div>
+    <div class="form-group"><label class="form-label">Description</label><input type="text" id="nqDesc" placeholder="Brief description..."></div>
+    <div class="form-group"><label class="form-label">XP Reward</label><input type="number" id="nqXP" value="100" min="10" max="500"></div>
+    <div class="form-group"><label class="form-label">Coins</label><input type="number" id="nqCoins" value="25" min="5" max="200"></div>
+    <div class="form-group"><label class="form-label">Difficulty</label>
+      <select id="nqDiff"><option value="E">Easy</option><option value="M" selected>Medium</option><option value="H">Hard</option><option value="L">Legendary</option></select>
+    </div>
+    <button class="btn-pri" onclick="submitQuest()">CREATE QUEST</button>
+    <button class="btn-sec" onclick="closeQuestModal()">CANCEL</button>
+  </div>
+</div>
+
+<div class="app">
+  <div class="hud-bar">
+    <div class="logo">⚡ BLAZE</div>
+    <div class="hud-resources">
+      <div class="rpill"><span style="font-size:9px;color:#b47aff;font-weight:700">XP</span><span id="hudXP">2,840</span></div>
+      <div class="rpill"><span style="color:var(--gold);font-size:12px">💰</span><span id="hudCoins">450</span></div>
+      <div class="rpill"><span style="font-size:12px">🔥</span><span id="hudStreak">7</span>d</div>
+      <div class="rpill" id="hudRankBadge" style="border-color:rgba(180,180,180,0.3)"><span id="hudRankIcon" style="font-size:13px">🥈</span><span id="hudRankName" style="font-size:11px;letter-spacing:1px;color:#c0c0c0">SILVER</span></div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="nav-item active" onclick="switchTab('dashboard',this)">📊 DASHBOARD</div>
+      <div class="nav-item" onclick="switchTab('quests',this)">📋 QUESTS</div>
+      <div class="nav-item" onclick="switchTab('ranking',this)">🏆 RANKING</div>
+      <div class="nav-item" onclick="switchTab('leaderboard',this)">⚔️ LEADERBOARD</div>
+      <div class="nav-item" onclick="switchTab('skills',this)">⚡ SKILLS</div>
+      <div class="nav-item" onclick="switchTab('inventory',this)">📦 INVENTORY</div>
+      <div class="nav-item" onclick="switchTab('shop',this)">🛒 SHOP</div>
+      <div class="nav-item" onclick="switchTab('streak',this)">🔥 STREAK</div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="tab-panel active" id="tab-dashboard">
+        <div class="stitle">COMMAND CENTER</div>
+        <div class="profile-card">
+          <div class="avatar">BL</div>
+          <div class="pname">BLAZER ONE</div>
+          <div class="pclass">DISCIPLINE WARRIOR</div>
+          <div class="lvl-badge"><span style="color:var(--text3);font-size:9px">LVL</span><span id="profileLvl">11</span></div>
+          <div class="xp-bar-c">
+            <div class="xp-lbl"><span>XP PROGRESS</span><span id="xpDisp">2840 / 4000</span></div>
+            <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:71%"></div></div>
+          </div>
+        </div>
+        <div class="stitle">MILESTONES</div>
+        <div class="milestones">
+          <div class="milestone"><div class="ms-dot reached">✓</div><div class="ms-label">LVL5</div></div>
+          <div class="milestone"><div class="ms-dot reached">✓</div><div class="ms-label">LVL10</div></div>
+          <div class="milestone"><div class="ms-dot current">11</div><div class="ms-label">NOW</div></div>
+          <div class="milestone"><div class="ms-dot">15</div><div class="ms-label">LVL15</div></div>
+          <div class="milestone"><div class="ms-dot">20</div><div class="ms-label">LVL20</div></div>
+        </div>
+        <div class="stitle" style="margin-top:14px">CORE STATS</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-name">Strength</div><div class="stat-val str-c" id="sSTR">72</div><div class="stat-bar"><div class="stat-fill str-f" id="bSTR" style="width:72%"></div></div></div>
+          <div class="stat-card"><div class="stat-name">Intelligence</div><div class="stat-val int-c" id="sINT">85</div><div class="stat-bar"><div class="stat-fill int-f" id="bINT" style="width:85%"></div></div></div>
+          <div class="stat-card"><div class="stat-name">Stamina</div><div class="stat-val sta-c" id="sSTA">64</div><div class="stat-bar"><div class="stat-fill sta-f" id="bSTA" style="width:64%"></div></div></div>
+          <div class="stat-card"><div class="stat-name">Discipline</div><div class="stat-val dis-c" id="sDIS">91</div><div class="stat-bar"><div class="stat-fill dis-f" id="bDIS" style="width:91%"></div></div></div>
+          <div class="stat-card" style="grid-column:span 2"><div class="stat-name">Focus</div><div class="stat-val foc-c" id="sFOC">78</div><div class="stat-bar"><div class="stat-fill foc-f" id="bFOC" style="width:78%"></div></div></div>
+        </div>
+        <button class="ai-btn" onclick="genAIQuest()"><div class="ai-pulse"></div>Generate AI Daily Quest<span style="margin-left:auto;font-size:11px;color:var(--accent3);font-family:'Share Tech Mono',monospace">CLAUDE POWERED</span></button>
+        <div id="aiResult" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px"></div>
+        <div class="stitle">TODAY'S QUESTS</div>
+        <div id="dashQL" class="quest-list"></div>
+      </div>
+
+      <!-- QUESTS -->
+      <div class="tab-panel" id="tab-quests">
+        <div class="stitle">QUEST LOG</div>
+        <button class="ai-btn" onclick="genAIQuest2()"><div class="ai-pulse"></div>AI Quest Generator<span style="margin-left:auto;font-size:11px;color:var(--accent3);font-family:'Share Tech Mono',monospace">CLAUDE POWERED</span></button>
+        <div id="aiResult2" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px"></div>
+        <div id="fullQL" class="quest-list"></div>
+        <button class="add-quest-btn" onclick="openQuestModal()">+ ADD CUSTOM QUEST</button>
+      </div>
+
+      <!-- RANKING -->
+      <div class="tab-panel" id="tab-ranking">
+        <div class="stitle">YOUR RANK</div>
+        <div class="season-bar">
+          <span class="season-icon">🌟</span>
+          <div class="season-info">
+            <div class="season-name">SEASON I — FIRE & FORGE</div>
+            <div class="season-time">14d 7h remaining · Ends May 2</div>
+            <div class="season-prog"><div class="season-prog-fill"></div></div>
+          </div>
+        </div>
+        <div id="rankHero" class="rank-hero"></div>
+        <div class="stitle">ALL RANK TIERS</div>
+        <div class="tiers-grid" id="tiersGrid"></div>
+        <div class="stitle">RANK REWARDS</div>
+        <div class="rank-rewards" id="rankRewards"></div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button onclick="simulateRankUp()" style="flex:1;padding:10px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);border-radius:6px;color:var(--gold);font-family:'Orbitron',monospace;font-size:10px;cursor:pointer;letter-spacing:2px">⚡ DEMO RANK UP</button>
+          <button onclick="simulateLevelUp()" style="flex:1;padding:10px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);border-radius:6px;color:var(--accent);font-family:'Orbitron',monospace;font-size:10px;cursor:pointer;letter-spacing:2px">⬆ DEMO LVL UP</button>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="tab-panel" id="tab-leaderboard">
+        <div class="stitle">GLOBAL LEADERBOARD</div>
+        <div class="season-bar">
+          <span class="season-icon">⚔️</span>
+          <div class="season-info">
+            <div class="season-name">TOP BLAZERS — SEASON I</div>
+            <div class="season-time">Updated live · Your global rank: <span style="color:var(--accent)">#<span id="myGlobalRank">47</span></span></div>
+            <div class="season-prog"><div class="season-prog-fill" style="width:40%"></div></div>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <div class="lb-header">
+            <span style="text-align:center">#</span>
+            <span>PLAYER</span>
+            <span>RANK</span>
+            <span style="text-align:right">XP</span>
+            <span style="text-align:right">STREAK</span>
+          </div>
+          <div id="lbList"></div>
+        </div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="tab-panel" id="tab-skills">
+        <div class="stitle">SKILL TREE</div>
+        <div class="skills-grid" id="skillsGrid"></div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="tab-panel" id="tab-inventory">
+        <div class="stitle">INVENTORY</div>
+        <div class="inv-grid" id="invGrid"></div>
+      </div>
+
+      <!-- SHOP -->
+      <div class="tab-panel" id="tab-shop">
+        <div class="stitle">BLAZE STORE</div>
+        <div class="shop-grid" id="shopGrid"></div>
+      </div>
+
+      <!-- STREAK -->
+      <div class="tab-panel" id="tab-streak">
+        <div class="stitle">DISCIPLINE RECORD</div>
+        <div class="streak-display">
+          <div class="streak-num" id="streakNum">7</div>
+          <div><div style="font-size:12px;color:var(--text2);letter-spacing:1px">DAY STREAK 🔥</div><div style="font-size:11px;color:var(--accent2);font-family:'Share Tech Mono',monospace;margin-top:2px">+35% XP BONUS ACTIVE</div></div>
+        </div>
+        <div class="stitle">THIS WEEK</div>
+        <div class="week-cal" id="weekCal"></div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:12px">
+          <div class="stitle">STREAK REWARDS</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><span>3-Day Streak</span><span style="color:var(--green);font-family:'Share Tech Mono',monospace">+15% XP ✓</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><span>7-Day Streak</span><span style="color:var(--green);font-family:'Share Tech Mono',monospace">+35% XP ✓</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><span>14-Day Streak</span><span style="color:var(--text3);font-family:'Share Tech Mono',monospace">+60% XP 🔒</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0"><span>30-Day Streak</span><span style="color:var(--text3);font-family:'Share Tech Mono',monospace">+100% XP 🔒</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div>
+        <div class="stitle">TODAY'S STATUS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:20px;font-family:'Orbitron',monospace;font-weight:700;color:var(--accent)" id="qDone">0</div>
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px">DONE</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:20px;font-family:'Orbitron',monospace;font-weight:700;color:var(--text2)" id="qLeft">5</div>
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px">LEFT</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="stitle">CURRENT RANK</div>
+        <div id="rightRankCard" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer" onclick="switchTab('ranking',document.querySelector('.nav-item:nth-child(3)'))"></div>
+      </div>
+      <div>
+        <div class="stitle">RANK PROGRESS</div>
+        <div id="rightRankProgress" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px"></div>
+      </div>
+      <div>
+        <div class="stitle">QUICK ACTIONS</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button onclick="openQuestModal()" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:12px;cursor:pointer;text-align:left;font-weight:600;letter-spacing:1px">+ ADD QUEST</button>
+          <button onclick="switchTab('leaderboard',document.querySelector('.nav-item:nth-child(4)'))" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:12px;cursor:pointer;text-align:left;font-weight:600;letter-spacing:1px">⚔️ LEADERBOARD</button>
+          <button onclick="simulateRankUp()" style="padding:9px 12px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.2);border-radius:6px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:12px;cursor:pointer;text-align:left;font-weight:600;letter-spacing:1px">🏆 DEMO RANK UP</button>
+        </div>
+      </div>
+      <div>
+        <div class="stitle">ACTIVE SKILLS</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="background:var(--bg);border:1px solid rgba(124,58,237,.3);border-radius:6px;padding:8px;display:flex;align-items:center;gap:8px"><span style="font-size:18px">⚡</span><div><div style="font-size:12px;font-weight:600">Focus Mode</div><div style="font-size:10px;color:var(--accent3)">+20% Focus XP</div></div></div>
+          <div style="background:var(--bg);border:1px solid rgba(0,200,255,.2);border-radius:6px;padding:8px;display:flex;align-items:center;gap:8px"><span style="font-size:18px">📚</span><div><div style="font-size:12px;font-weight:600">Deep Work</div><div style="font-size:10px;color:var(--accent)">+15% INT XP</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RANKS = [
+  { name:'BRONZE',   icon:'🥉', color:'#cd7f32', border:'rgba(205,127,50,.4)',  minXP:0,     maxXP:2000,  reward:'500 coins + Bronze Badge',   bg:'rgba(205,127,50,.08)' },
+  { name:'SILVER',   icon:'🥈', color:'#c0c0c0', border:'rgba(192,192,192,.4)', minXP:2000,  maxXP:5000,  reward:'1000 coins + Silver Frame',  bg:'rgba(192,192,192,.08)' },
+  { name:'GOLD',     icon:'🥇', color:'#ffd700', border:'rgba(255,215,0,.4)',   minXP:5000,  maxXP:10000, reward:'2000 coins + Gold Aura',     bg:'rgba(255,215,0,.08)' },
+  { name:'PLATINUM', icon:'💎', color:'#00c8ff', border:'rgba(0,200,255,.4)',   minXP:10000, maxXP:20000, reward:'5000 coins + Platinum Title', bg:'rgba(0,200,255,.08)' },
+  { name:'DIAMOND',  icon:'🔷', color:'#a78bfa', border:'rgba(167,139,250,.4)', minXP:20000, maxXP:35000, reward:'10000 coins + Diamond Crown', bg:'rgba(167,139,250,.08)' },
+  { name:'MASTER',   icon:'👑', color:'#ff6b35', border:'rgba(255,107,53,.4)',  minXP:35000, maxXP:55000, reward:'Custom Profile + Master Cape', bg:'rgba(255,107,53,.08)' },
+  { name:'LEGEND',   icon:'🌟', color:'#ff3366', border:'rgba(255,51,102,.4)',  minXP:55000, maxXP:100000,reward:'Hall of Fame + Legend Status', bg:'rgba(255,51,102,.08)' },
+];
+
+const LB_PLAYERS = [
+  { name:'NightHawk', initials:'NH', color:'#ff3366', bg:'rgba(255,51,102,.2)', class:'SHADOW BLADE',   rankIdx:6, totalXP:87420, streak:42 },
+  { name:'ZenMaster', initials:'ZM', color:'#a78bfa', bg:'rgba(167,139,250,.2)', class:'MIND ARCHITECT', rankIdx:5, totalXP:62800, streak:31 },
+  { name:'IronClad',  initials:'IC', color:'#ff6b35', bg:'rgba(255,107,53,.2)', class:'IRON WARRIOR',   rankIdx:5, totalXP:58100, streak:28 },
+  { name:'QuantumX',  initials:'QX', color:'#00c8ff', bg:'rgba(0,200,255,.2)',  class:'TECH SAVANT',   rankIdx:4, totalXP:18700, streak:19 },
+  { name:'PhoenixR',  initials:'PR', color:'#ffd700', bg:'rgba(255,215,0,.2)',  class:'REBIRTH KNIGHT', rankIdx:3, totalXP:8950,  streak:15 },
+  { name:'BLAZER ONE',initials:'BL', color:'#00c8ff', bg:'rgba(0,200,255,.25)',  class:'DISC. WARRIOR',  rankIdx:1, totalXP:2840,  streak:7, isMe:true },
+  { name:'SkyRacer',  initials:'SR', color:'#00ff88', bg:'rgba(0,255,136,.2)',  class:'SWIFT RUNNER',   rankIdx:1, totalXP:2100,  streak:5 },
+  { name:'DuskBlade', initials:'DB', color:'#b47aff', bg:'rgba(180,122,255,.2)', class:'DARK DISCIPLE', rankIdx:0, totalXP:1200,  streak:3 },
+  { name:'StarSeeker',initials:'SS', color:'#ffd700', bg:'rgba(255,215,0,.2)',  class:'LORE KEEPER',    rankIdx:0, totalXP:800,   streak:2 },
+  { name:'ColdFire',  initials:'CF', color:'#00c8ff', bg:'rgba(0,200,255,.2)',  class:'CRYO MONK',      rankIdx:0, totalXP:430,   streak:1 },
+];
+
+let S = {
+  xp:2840, totalXP:2840, xpMax:4000, coins:450, streak:7, level:11,
+  rankIdx:1,
+  stats:{ STR:72, INT:85, STA:64, DIS:91, FOC:78 },
+  quests:[
+    {id:1,name:'Morning Workout',desc:'Complete 30 min cardio',xp:120,coins:30,diff:'M',tags:['STR','STA'],done:false},
+    {id:2,name:'Study Session',desc:'2 hours focused learning',xp:200,coins:50,diff:'H',tags:['INT','FOC'],done:false},
+    {id:3,name:'Trading Review',desc:'Analyze 3 charts & journal',xp:150,coins:35,diff:'M',tags:['INT','DIS'],done:false},
+    {id:4,name:'Meditation',desc:'15 min mindfulness',xp:80,coins:20,diff:'E',tags:['FOC'],done:false},
+    {id:5,name:'Read 30 Pages',desc:'Continue current book',xp:100,coins:25,diff:'E',tags:['INT'],done:false},
+  ],
+  skills:[
+    {id:1,name:'Focus Mode',icon:'⚡',level:2,unlocked:true},
+    {id:2,name:'Deep Work',icon:'📚',level:1,unlocked:true},
+    {id:3,name:'Iron Will',icon:'🛡',level:3,unlocked:true},
+    {id:4,name:'Surge Protocol',icon:'🚀',level:0,unlocked:false,reqLevel:15},
+    {id:5,name:'Mind Palace',icon:'🧠',level:0,unlocked:false,reqLevel:12},
+    {id:6,name:'Shadow Work',icon:'🌑',level:0,unlocked:false,reqLevel:20},
+  ],
+  inventory:[
+    {icon:'⚡',count:3},{icon:'🧿',count:1},{icon:'🏆',count:1},
+    {icon:'🔮',count:2},{icon:'💎',count:1},{icon:'🎯',count:5},
+    null,null,null,null,null,null,null,null,null,
+  ],
+  shopItems:[
+    {icon:'⚡',name:'XP Booster',desc:'+50% XP for 24h',price:100},
+    {icon:'🔮',name:'Streak Shield',desc:'Protect a missed day',price:200},
+    {icon:'🌙',name:'Night Mode',desc:'Unlock dark skins',price:150},
+    {icon:'💥',name:'Double Coins',desc:'+2x coins for 12h',price:180},
+    {icon:'🧿',name:'Stat Reset',desc:'Redistribute stat points',price:300},
+    {icon:'🎖',name:'Legendary Title',desc:'Exclusive badge',price:500},
+  ]
+};
+
+function curRank(){ return RANKS[S.rankIdx]; }
+function nextRank(){ return RANKS[S.rankIdx+1]||null; }
+
+function rankProgress(){
+  const r = curRank();
+  const span = r.maxXP - r.minXP;
+  const gained = Math.max(0, S.totalXP - r.minXP);
+  return Math.min(100, Math.round(gained/span*100));
+}
+
+function toast(msg, type='info'){
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-title">${msg}</div>`;
+  c.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',2600);
+  setTimeout(()=>t.remove(),3100);
+}
+
+function updateHUD(){
+  document.getElementById('hudXP').textContent = S.xp.toLocaleString();
+  document.getElementById('hudCoins').textContent = S.coins.toLocaleString();
+  document.getElementById('hudStreak').textContent = S.streak;
+  document.getElementById('streakNum').textContent = S.streak;
+  document.getElementById('profileLvl').textContent = S.level;
+  document.getElementById('xpDisp').textContent = `${S.xp.toLocaleString()} / ${S.xpMax.toLocaleString()}`;
+  const xpPct = Math.min(100,Math.round(S.xp/S.xpMax*100));
+  document.getElementById('xpFill').style.width = xpPct+'%';
+  const r = curRank();
+  document.getElementById('hudRankIcon').textContent = r.icon;
+  document.getElementById('hudRankName').textContent = r.name;
+  document.getElementById('hudRankName').style.color = r.color;
+  updateStats();
+  updateRankWidgets();
+}
+
+function updateStats(){
+  ['STR','INT','STA','DIS','FOC'].forEach(k=>{
+    const v = document.getElementById('s'+k);
+    const b = document.getElementById('b'+k);
+    if(v) v.textContent=S.stats[k];
+    if(b) b.style.width=S.stats[k]+'%';
+  });
+}
+
+function updateRankWidgets(){
+  const r = curRank();
+  const nr = nextRank();
+  const pct = rankProgress();
+
+  // Right panel rank card
+  const rc = document.getElementById('rightRankCard');
+  if(rc) rc.innerHTML=`
+    <div style="font-size:32px;margin-bottom:4px">${r.icon}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:${r.color}">${r.name}</div>
+    <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:2px">SEASON I RANK</div>
+  `;
+
+  // Right panel progress
+  const rp = document.getElementById('rightRankProgress');
+  if(rp) rp.innerHTML=`
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'Share Tech Mono',monospace;margin-bottom:5px">
+      <span>${r.name}</span><span>${nr?nr.name:'MAX'}</span>
+    </div>
+    <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)">
+      <div style="height:100%;width:${pct}%;background:${r.color};border-radius:3px;transition:width .8s"></div>
+    </div>
+    <div style="text-align:center;font-size:10px;color:${r.color};font-family:'Share Tech Mono',monospace;margin-top:5px">${pct}% · ${nr?(nr.minXP-S.totalXP).toLocaleString()+' XP to '+nr.name:'MAXIMUM RANK'}</div>
+  `;
+}
+
+function renderRankHero(){
+  const el = document.getElementById('rankHero');
+  if(!el) return;
+  const r = curRank();
+  const nr = nextRank();
+  const pct = rankProgress();
+  el.style.setProperty('--rcolor', r.color);
+  el.querySelector('::before');
+  el.style.background = r.bg;
+  el.style.borderColor = r.border;
+  el.innerHTML = `
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${r.color}"></div>
+    <div class="rank-badge-big rank-animate" style="color:${r.color}">${r.icon}</div>
+    <div class="rank-name-big" style="color:${r.color}">${r.name}</div>
+    <div class="rank-sub">${r.name} TIER · SEASON I</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Total XP: <span style="color:${r.color};font-family:'Share Tech Mono',monospace">${S.totalXP.toLocaleString()}</span></div>
+    <div class="rank-progress-wrap">
+      <div class="rank-progress-fill" style="width:${pct}%;background:${r.color}"></div>
+    </div>
+    <div class="rank-progress-lbl">
+      <span style="color:${r.color}">${r.minXP.toLocaleString()} XP</span>
+      <span style="color:${r.color}">${pct}%</span>
+      <span>${r.maxXP.toLocaleString()} XP</span>
+    </div>
+    ${nr?`<div style="margin-top:10px;font-size:12px;color:var(--text2)">Next: <span style="color:${nr.color};font-weight:700">${nr.icon} ${nr.name}</span> · <span style="font-family:'Share Tech Mono',monospace;color:${nr.color}">${(nr.minXP-S.totalXP).toLocaleString()} XP needed</span></div>`:'<div style="margin-top:10px;font-size:12px;color:var(--gold)">★ MAXIMUM RANK ACHIEVED ★</div>'}
+  `;
+}
+
+function renderTiers(){
+  const el = document.getElementById('tiersGrid');
+  if(!el) return;
+  el.innerHTML = RANKS.map((r,i)=>{
+    const unlocked = S.rankIdx >= i;
+    const isCurrent = S.rankIdx === i;
+    return `
+    <div class="tier-card ${isCurrent?'current':''} ${!unlocked&&!isCurrent?'locked':''}"
+      style="${isCurrent?`border-color:${r.color}`:''};${unlocked&&!isCurrent?'opacity:.75':''}"
+      onclick="toast('${r.name}: ${r.reward}','info')">
+      ${isCurrent?`<div class="current-badge">★ CURRENT</div>`:''}
+      <span class="tier-icon">${r.icon}</span>
+      <div class="tier-name" style="color:${r.color}">${r.name}</div>
+      <div class="tier-req">${r.minXP.toLocaleString()} XP</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRankRewards(){
+  const el = document.getElementById('rankRewards');
+  if(!el) return;
+  el.innerHTML = RANKS.map((r,i)=>{
+    const claimed = i < S.rankIdx;
+    const isCurrent = i === S.rankIdx;
+    return `
+    <div class="reward-row ${claimed?'claimed':''} ${isCurrent?'current':''}">
+      <div class="reward-rank-icon">${r.icon}</div>
+      <div class="reward-info">
+        <div class="reward-name" style="color:${r.color}">${r.name}</div>
+        <div class="reward-desc">${r.reward}</div>
+      </div>
+      <div class="reward-prize">${claimed?'✓ CLAIMED':isCurrent?'CURRENT':'🔒'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLeaderboard(){
+  const el = document.getElementById('lbList');
+  if(!el) return;
+  const sorted = [...LB_PLAYERS].sort((a,b)=>b.totalXP-a.totalXP);
+  const posColors = ['var(--gold)','#c0c0c0','#cd7f32'];
+  const posIcons = ['🥇','🥈','🥉'];
+  el.innerHTML = sorted.map((p,i)=>{
+    const rank = RANKS[p.rankIdx];
+    const rowClass = p.isMe?'me':i===0?'top1':i===1?'top2':i===2?'top3':'';
+    return `
+    <div class="lb-row ${rowClass}">
+      <div class="lb-rank" style="color:${i<3?posColors[i]:'var(--text3)'}">${i<3?posIcons[i]:`#${i+1}`}</div>
+      <div class="lb-player">
+        <div class="lb-avatar" style="background:${p.bg};color:${p.color}">${p.initials}</div>
+        <div>
+          <div class="lb-pname" style="${p.isMe?'color:var(--accent)':''}">${p.name}${p.isMe?' (YOU)':''}</div>
+          <div class="lb-class">${p.class}</div>
+        </div>
+      </div>
+      <div><span style="font-size:14px">${rank.icon}</span> <span style="font-size:10px;color:${rank.color};letter-spacing:1px">${rank.name}</span></div>
+      <div class="lb-xp">${p.totalXP.toLocaleString()}</div>
+      <div class="lb-streak">🔥${p.streak}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderQuestItem(q, small){
+  const dc = {E:'var(--green)',M:'var(--accent)',H:'var(--accent2)',L:'var(--accent3)'}[q.diff];
+  return `<div class="quest-item ${q.done?'completed':''}" onclick="toggleQuest(${q.id})">
+    <div class="qcheck">${q.done?'<svg width="11" height="11" fill="none" stroke="var(--bg)" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3"/></svg>':''}</div>
+    <div class="qinfo">
+      <div class="qname" style="${q.done?'text-decoration:line-through':''}">${q.name}</div>
+      ${!small?`<div class="qdesc">${q.desc}</div>`:''}
+      <div class="qtags">
+        <span class="qtag tag-xp">+${q.xp} XP</span>
+        <span class="qtag tag-coin">+${q.coins}</span>
+        ${q.tags.map(t=>`<span class="qtag tag-stat">${t}</span>`).join('')}
+      </div>
+    </div>
+    <div style="font-size:11px;color:${dc};font-family:'Share Tech Mono',monospace;flex-shrink:0">${q.diff}</div>
+  </div>`;
+}
+
+function renderAllQuests(){
+  const d=document.getElementById('dashQL');
+  const f=document.getElementById('fullQL');
+  if(d) d.innerHTML=S.quests.slice(0,3).map(q=>renderQuestItem(q,true)).join('');
+  if(f) f.innerHTML=S.quests.map(q=>renderQuestItem(q,false)).join('');
+  const done=S.quests.filter(q=>q.done).length;
+  const d2=document.getElementById('qDone');const l2=document.getElementById('qLeft');
+  if(d2)d2.textContent=done;if(l2)l2.textContent=S.quests.length-done;
+}
+
+function toggleQuest(id){
+  const q=S.quests.find(q=>q.id===id);
+  if(!q||q.done) return;
+  q.done=true;
+  const mult=S.streak>=7?1.35:S.streak>=3?1.15:1;
+  const xpg=Math.round(q.xp*mult);
+  S.xp+=xpg; S.totalXP+=xpg; S.coins+=q.coins;
+  q.tags.forEach(t=>{if(S.stats[t])S.stats[t]=Math.min(100,S.stats[t]+1)});
+  toast(`Quest Complete! +${xpg} XP, +${q.coins} coins`,'success');
+  checkLevelUp();
+  checkRankUp();
+  updateHUD();
+  renderAllQuests();
+}
+
+function checkLevelUp(){
+  if(S.xp>=S.xpMax){
+    S.xp-=S.xpMax; S.level++;
+    S.xpMax=Math.round(S.xpMax*1.3);
+    Object.keys(S.stats).forEach(k=>S.stats[k]=Math.min(100,S.stats[k]+2));
+    document.getElementById('lvlNum').textContent=S.level;
+    document.getElementById('lvlOverlay').classList.add('show');
+  }
+}
+
+function checkRankUp(){
+  const nr = nextRank();
+  if(nr && S.totalXP >= nr.minXP){
+    S.rankIdx++;
+    const r = curRank();
+    document.getElementById('rankupIcon').textContent = r.icon;
+    document.getElementById('rankupIcon').style.color = r.color;
+    document.getElementById('rankupNew').textContent = r.name;
+    document.getElementById('rankupNew').style.color = r.color;
+    document.getElementById('rankupOverlay').classList.add('show');
+    renderTiers();
+    renderRankRewards();
+    renderRankHero();
+    LB_PLAYERS.find(p=>p.isMe).rankIdx = S.rankIdx;
+    renderLeaderboard();
+  }
+}
+
+function simulateRankUp(){
+  if(!nextRank()){toast('Already at maximum rank!','warning');return}
+  S.totalXP = nextRank().minXP + 100;
+  checkRankUp();
+  updateHUD();
+}
+
+function simulateLevelUp(){
+  S.xp=S.xpMax;
+  checkLevelUp();
+  updateHUD();
+}
+
+function closeLvl(){ document.getElementById('lvlOverlay').classList.remove('show'); updateHUD(); }
+function closeRankup(){ document.getElementById('rankupOverlay').classList.remove('show'); updateHUD(); }
+
+function renderSkills(){
+  const el=document.getElementById('skillsGrid');
+  if(!el)return;
+  el.innerHTML=S.skills.map(s=>`
+    <div class="skill-card ${s.unlocked?'unlocked':'locked'}" onclick="upgradeSkill(${s.id})">
+      ${!s.unlocked?`<span style="position:absolute;top:5px;right:5px;font-size:10px">🔒</span>`:''}
+      <span style="font-size:22px;margin-bottom:4px;display:block">${s.icon}</span>
+      <div style="font-size:11px;font-weight:600;margin-bottom:3px">${s.name}</div>
+      <div style="font-size:10px;color:var(--accent3);font-family:'Share Tech Mono',monospace">${s.unlocked?'LVL '+s.level:'REQ '+s.reqLevel}</div>
+    </div>`).join('');
+}
+
+function upgradeSkill(id){
+  const s=S.skills.find(s=>s.id===id);
+  if(!s)return;
+  if(!s.unlocked){toast(`Reach Level ${s.reqLevel} to unlock!`,'warning');return}
+  if(S.coins>=50){S.coins-=50;s.level++;updateHUD();toast(`${s.name} → Level ${s.level}! (-50 coins)`,'info');renderSkills();}
+  else toast('Not enough coins!','warning');
+}
+
+function renderInventory(){
+  const el=document.getElementById('invGrid');
+  if(!el)return;
+  el.innerHTML=S.inventory.map(item=>item
+    ?`<div class="inv-slot"><span style="font-size:20px">${item.icon}</span><span class="inv-count">x${item.count}</span></div>`
+    :`<div class="inv-slot empty"></div>`
+  ).join('');
+}
+
+function renderShop(){
+  const el=document.getElementById('shopGrid');
+  if(!el)return;
+  el.innerHTML=S.shopItems.map((item,i)=>`
+    <div class="shop-item" onclick="buyItem(${i})">
+      <span style="font-size:26px">${item.icon}</span>
+      <div class="shop-name">${item.name}</div>
+      <div class="shop-desc">${item.desc}</div>
+      <div class="shop-price">💰 ${item.price}</div>
+    </div>`).join('');
+}
+
+function buyItem(i){
+  const item=S.shopItems[i];
+  if(S.coins>=item.price){
+    S.coins-=item.price;updateHUD();toast(`Purchased ${item.name}!`,'success');
+    const e=S.inventory.findIndex(s=>s===null);
+    if(e>-1)S.inventory[e]={icon:item.icon,count:1};
+  } else toast(`Need ${item.price-S.coins} more coins!`,'warning');
+}
+
+function renderStreak(){
+  const days=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const st=['done','done','done','done','done','done','today'];
+  const el=document.getElementById('weekCal');
+  if(!el)return;
+  el.innerHTML=days.map((d,i)=>`
+    <div class="day-dot">
+      <div class="day-lbl">${d}</div>
+      <div class="day-circle ${st[i]}">${st[i]==='done'?'✓':st[i]==='today'?'!':'×'}</div>
+    </div>`).join('');
+}
+
+function openQuestModal(){ document.getElementById('addQuestModal').classList.add('show'); }
+function closeQuestModal(){ document.getElementById('addQuestModal').classList.remove('show'); }
+function submitQuest(){
+  const name=document.getElementById('nqName').value.trim();
+  if(!name){toast('Enter a quest name!','warning');return}
+  S.quests.push({id:Date.now(),name,desc:document.getElementById('nqDesc').value||'Custom quest',xp:parseInt(document.getElementById('nqXP').value)||100,coins:parseInt(document.getElementById('nqCoins').value)||25,diff:document.getElementById('nqDiff').value,tags:['DIS'],done:false});
+  closeQuestModal();
+  toast(`Quest "${name}" added!`,'success');
+  renderAllQuests();
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(el)el.classList.add('active');
+  if(tab==='ranking'){renderRankHero();renderTiers();renderRankRewards();}
+  if(tab==='leaderboard')renderLeaderboard();
+  if(tab==='skills')renderSkills();
+  if(tab==='inventory')renderInventory();
+  if(tab==='shop')renderShop();
+  if(tab==='streak')renderStreak();
+}
+
+async function genAIQuest(){
+  toast('AI generating quest...','info');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are the Blaze System AI quest generator. Player: Level ${S.level}, Rank ${curRank().name}, STR ${S.stats.STR} INT ${S.stats.INT} STA ${S.stats.STA} DIS ${S.stats.DIS} FOC ${S.stats.FOC}, streak ${S.streak} days. Respond ONLY with raw JSON (no markdown): {"name":"...","description":"...","rationale":"...","steps":["...","...","..."],"xp":number,"coins":number,"primaryStat":"STR|INT|STA|DIS|FOC","difficulty":"E|M|H|L"}`}]})});
+    const data=await res.json();
+    const q=JSON.parse(data.content?.find(b=>b.type==='text')?.text||'{}');
+    const html=buildAIHtml(q);
+    window._aiq=q;
+    const el=document.getElementById('aiResult');
+    if(el){el.style.display='block';el.innerHTML=html;}
+    toast(`AI Quest: ${q.name}`,'success');
+  }catch(e){toast('AI generation failed','warning');}
+}
+
+async function genAIQuest2(){
+  toast('AI generating quest...','info');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are the Blaze System AI quest generator. Player: Level ${S.level}, Rank ${curRank().name}, STR ${S.stats.STR} INT ${S.stats.INT} STA ${S.stats.STA} DIS ${S.stats.DIS} FOC ${S.stats.FOC}, streak ${S.streak} days. Respond ONLY with raw JSON: {"name":"...","description":"...","rationale":"...","steps":["...","...","..."],"xp":number,"coins":number,"primaryStat":"STR|INT|STA|DIS|FOC","difficulty":"E|M|H|L"}`}]})});
+    const data=await res.json();
+    const q=JSON.parse(data.content?.find(b=>b.type==='text')?.text||'{}');
+    window._aiq=q;
+    const el=document.getElementById('aiResult2');
+    if(el){el.style.display='block';el.innerHTML=buildAIHtml(q);}
+    toast(`AI Quest: ${q.name}`,'success');
+  }catch(e){toast('AI generation failed','warning');}
+}
+
+function buildAIHtml(q){
+  const dc={E:'var(--green)',M:'var(--accent)',H:'var(--accent2)',L:'var(--accent3)'}[q.difficulty]||'var(--text2)';
+  return `
+    <div style="margin-bottom:6px"><span style="font-size:14px;font-weight:700">${q.name}</span> <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(255,107,53,.2);color:var(--accent2);border:1px solid rgba(255,107,53,.3)">${q.difficulty}</span></div>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:6px">${q.description}</div>
+    <div style="color:var(--accent3);font-size:11px;margin-bottom:8px;font-style:italic">${q.rationale}</div>
+    ${(q.steps||[]).map(s=>`<div style="font-size:12px;color:var(--text2);padding:3px 0;padding-left:10px;border-left:2px solid var(--border)">→ ${s}</div>`).join('')}
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(124,58,237,.2);color:#b47aff;border:1px solid rgba(124,58,237,.3)">+${q.xp} XP</span>
+      <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.2)">+${q.coins}</span>
+      <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2)">${q.primaryStat}</span>
+    </div>
+    <button onclick="addAIQuest()" style="margin-top:10px;padding:7px 18px;background:var(--accent3);color:white;border:none;border-radius:4px;font-family:'Orbitron',monospace;font-size:10px;cursor:pointer;letter-spacing:2px">ACCEPT QUEST</button>`;
+}
+
+function addAIQuest(){
+  const q=window._aiq; if(!q)return;
+  S.quests.push({id:Date.now(),name:q.name,desc:q.description,xp:q.xp||100,coins:q.coins||25,diff:q.difficulty||'M',tags:[q.primaryStat||'INT'],done:false});
+  renderAllQuests();
+  toast(`"${q.name}" added!`,'success');
+  window._aiq=null;
+}
+
+// Init
+renderAllQuests();
+renderStreak();
+updateHUD();
+renderLeaderboard();
+
+setTimeout(()=>toast('Welcome back, Blazer! 🔥 7-day streak active','info'),500);
+setTimeout(()=>toast('Ranking system online — Check your rank!','gold'),1800);
+</script>
